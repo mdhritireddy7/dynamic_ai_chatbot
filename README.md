@@ -25,7 +25,7 @@ source venv/bin/activate   # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-2. Get an API key from [Together.ai](https://api.together.ai/) (free credits on signup) or OpenAI/Anthropic.
+2. Get an API key from [Together.ai](https://api.together.ai/) (free credits on signup) or Anthropic.
 
 3. Create a `.env` file in the project root:
 
@@ -54,7 +54,7 @@ Bot: Berlin. Is there a theme here, or are we just going through Europe one coun
 ## Tech stack
 
 - Python 3
-- OpenAI Python SDK
+- Anthropic Python SDK
 - tiktoken for token counting
 - python-dotenv for environment variable management
 

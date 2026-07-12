@@ -29,6 +29,8 @@ class ConversationManager():
             ]
         
         self.conversation_history.append(self.messages[0])
+
+        self.enforce_token_management()
         
         self.response = self.client.messages.create(model=self.model,
                                                     max_tokens=self.max_tokens,
@@ -55,6 +57,11 @@ class ConversationManager():
     
     def total_tokens_used(self):
         return sum(self.count_tokens(message['content'] for message in self.conversation_history))
+    
+
+    def enforce_token_management(self):
+        while self.total_tokens_used() > self.token_budget:
+            self.conversation_history.pop(1)
     
 conv_manager = ConversationManager()
 print(conv_manager.chat_completion("Tell me a joke"))

@@ -17,13 +17,15 @@ class ConversationManager():
         self.model = model if model is not None else DEFAULT_MODEL
         self.max_tokens = max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS
         self.temperature = temperature if temperature is not None else DEFAULT_TEMPERATURE
-
         self.client = Anthropic(api_key=self.api_key)
+        self.conversation_history = [{"role": "system", "content": self.system_message}]
 
     def chat_completion(self, prompt):
         self.messages = [
             {"role": "user", "content": prompt}
             ]
+        
+        self.conversation_history.append(self.messages[0])
         
         self.response = self.client.messages.create(model=self.model,
                                                     max_tokens=self.max_tokens,
@@ -32,6 +34,8 @@ class ConversationManager():
                                                     temperature=self.temperature)
         
         ai_response = self.response.content[0].text
+
+        self.conversation_history.append({"role": "ai_assistant", "content": ai_response})
 
         return ai_response
     

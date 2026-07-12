@@ -16,6 +16,10 @@ class ConversationManager():
     def __init__(self, api_key=None, base_url=None, system_message=None, model=None, max_tokens=None, temperature=None, token_budget=None):
         self.api_key = api_key if api_key is not None else DEFAULT_API_KEY
         self.system_message = system_message if system_message is not None else DEFAULT_SYSTEM_MESSAGE
+        self.system_messages = {"sassy_assistant": "A sassy assistant who is fed up with answering questions.", 
+                                "angry_assistant": "An angry assistant that likes yelling in all caps.", 
+                                "thoughtful_assistant": "A thoughtful assistant, always ready to dig deeper. This assistant asks clarifying questions to ensure understanding and approaches problems with a step-by-step methodology.",
+                                "custom": "A placeholder for your custom system message."}
         self.model = model if model is not None else DEFAULT_MODEL
         self.max_tokens = max_tokens if max_tokens is not None else DEFAULT_MAX_TOKENS
         self.token_budget = token_budget if token_budget is not None else DEFAULT_TOKEN_BUDGET
@@ -62,6 +66,27 @@ class ConversationManager():
     def enforce_token_management(self):
         while self.total_tokens_used() > self.token_budget:
             self.conversation_history.pop(1)
+
+    def set_persona(self, persona):
+        if persona in self.system_messages:
+            self.system_message = self.system_messages[persona]
+            self.update_system_message_in_history()
+        else:
+            raise ValueError("Persona not found")
+        
+    def set_custom_system_message(self, custom_message):
+        if not custom_message:
+            raise ValueError("Custom message cannot be empty.")
+        self.system_messages["custom"] = custom_message
+        self.set_persona("custom")
+
+    
+    def update_system_message_in_history(self):
+        if self.conversation_history and self.conversation_history[0]["role"] == "system":
+            self.conversation_history[0]["content"] = self.system_message
+        else:
+            self.conversation_history.insert(0, {"role": "system", "content": self.system_message})
+
     
 conv_manager = ConversationManager()
 print(conv_manager.chat_completion("Tell me a joke"))

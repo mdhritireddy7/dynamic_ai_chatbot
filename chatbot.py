@@ -2,6 +2,8 @@ import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 import tiktoken
+from datetime import datetime
+import json
 
 load_dotenv()
 
@@ -12,8 +14,13 @@ DEFAULT_MAX_TOKENS = 1024
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_TOKEN_BUDGET = 4096
 
+now = datetime.now()
+timestamp = now.strftime("%Y%m%d_%H%M%S")
+filename = f"file_{timestamp}.txt"
+DEFAULT_HISTORY_FILE = filename
+
 class ConversationManager():
-    def __init__(self, api_key=None, base_url=None, system_message=None, model=None, max_tokens=None, temperature=None, token_budget=None):
+    def __init__(self, api_key=None, base_url=None, system_message=None, model=None, max_tokens=None, temperature=None, token_budget=None, history_file=None):
         self.api_key = api_key if api_key is not None else DEFAULT_API_KEY
         self.system_message = system_message if system_message is not None else DEFAULT_SYSTEM_MESSAGE
         self.system_messages = {"sassy_assistant": "A sassy assistant who is fed up with answering questions.", 
@@ -25,7 +32,9 @@ class ConversationManager():
         self.token_budget = token_budget if token_budget is not None else DEFAULT_TOKEN_BUDGET
         self.temperature = temperature if temperature is not None else DEFAULT_TEMPERATURE
         self.client = Anthropic(api_key=self.api_key)
-        self.conversation_history = [{"role": "system", "content": self.system_message}]
+        self.history_file = history_file if history_file is not None else DEFAULT_HISTORY_FILE
+
+        self.load_conversation_history()
 
     def chat_completion(self, prompt):
         self.messages = [
@@ -46,6 +55,8 @@ class ConversationManager():
 
         self.conversation_history.append({"role": "ai_assistant", "content": ai_response})
         print(f"Total tokens used: {self.total_tokens_used()}")
+
+        self.save_conversation_history()
 
         return ai_response
     
@@ -86,6 +97,20 @@ class ConversationManager():
             self.conversation_history[0]["content"] = self.system_message
         else:
             self.conversation_history.insert(0, {"role": "system", "content": self.system_message})
+
+    def load_conversation_history(self):
+        try:
+            with open(self.history_file, "r") as file:
+                self.conversation_history = json.load(file)
+        except FileNotFoundError:
+            self.conversation_history = [{"role": "system", "content": self.system_message}]
+        except json.JSONDecodeError:
+            print("Error reading the conversation history file. Starting with an empty history.")
+            self.conversation_history = [{"role": "system", "content": self.system_message}]
+
+    def save_conversation_history(self):
+        with open(self.history_file, "w") as file:
+            json.dump(self.conversation_history, file, indent=4)
 
     
 conv_manager = ConversationManager()

@@ -45,11 +45,15 @@ class ConversationManager():
 
         self.enforce_token_management()
         
-        self.response = self.client.messages.create(model=self.model,
+        try:
+            self.response = self.client.messages.create(model=self.model,
                                                     max_tokens=self.max_tokens,
                                                     system=self.system_message,
                                                     messages=self.messages,
                                                     temperature=self.temperature)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return None
         
         ai_response = self.response.content[0].text
 
@@ -109,8 +113,20 @@ class ConversationManager():
             self.conversation_history = [{"role": "system", "content": self.system_message}]
 
     def save_conversation_history(self):
-        with open(self.history_file, "w") as file:
-            json.dump(self.conversation_history, file, indent=4)
+        try:
+            with open(self.history_file, "w") as file:
+                json.dump(self.conversation_history, file, indent=4)
+        except IOError:
+            print(f"An unexpected error occurred while saving the conversation history")
+        except Exception as e:
+            print(f"An unexpected error occurred while saving the conversation history: {e}")
+
+    def reset_conversation_history(self):
+        self.conversation_history = [{"role": "system", "content": self.system_message}]
+        try:
+            self.save_conversation_history()  
+        except Exception as e:
+            print(f"An unexpected error occurred while resetting the conversation history: {e}")
 
     
 conv_manager = ConversationManager()
